@@ -1,0 +1,27 @@
+#!/bin/sh
+# Runs the png2ico binary bundled with this skill for the current OS and CPU.
+dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd) || exit 1
+
+case $(uname -s) in
+  Darwin) os=darwin ;;
+  Linux) os=linux ;;
+  MINGW* | MSYS* | CYGWIN*) os=windows ;;
+  *) os=$(uname -s) ;;
+esac
+case $(uname -m) in
+  x86_64 | amd64) arch=amd64 ;;
+  arm64 | aarch64) arch=arm64 ;;
+  *) arch=$(uname -m) ;;
+esac
+ext=
+if [ "$os" = windows ]; then ext=.exe; fi
+
+bin="$dir/bin/png2ico-$os-$arch$ext"
+if [ ! -f "$bin" ]; then
+  echo "png2ico: no bundled binary for $os-$arch (expected $bin)" >&2
+  echo "png2ico: this copy of the skill ships darwin, linux and windows binaries for amd64 and arm64 only" >&2
+  exit 127
+fi
+# Archives and uploads often drop the executable bit.
+[ -x "$bin" ] || chmod +x "$bin" 2>/dev/null
+exec "$bin" "$@"
